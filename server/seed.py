@@ -15,7 +15,7 @@ with app.app_context():
     Article.query.delete()
     User.query.delete()
 
-    fake = Faker()
+
 
     print("Creating users...")
     users = []
@@ -25,7 +25,7 @@ with app.app_context():
         username = fake.first_name()
         while username in usernames:
             username = fake.first_name()
-        
+
         usernames.append(username)
 
         user = User(username=username)
@@ -35,22 +35,30 @@ with app.app_context():
 
     print("Creating articles...")
     articles = []
+    member_only_created = False
     for i in range(100):
         content = fake.paragraph(nb_sentences=8)
         preview = content[:25] + '...'
-        
+
+        # Ensure at least one article is member-only
+        if not member_only_created:
+            is_member_only = True
+            member_only_created = True
+        else:
+            is_member_only = rc([True, False, False])
+
         article = Article(
             author=fake.name(),
             title=fake.sentence(),
             content=content,
             preview=preview,
-            minutes_to_read=randint(1,20),
-            is_member_only = rc([True, False, False])
+            minutes_to_read=randint(1, 20),
+            is_member_only=is_member_only
         )
 
         articles.append(article)
 
     db.session.add_all(articles)
-    
+
     db.session.commit()
     print("Complete.")
